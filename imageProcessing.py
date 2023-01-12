@@ -4,13 +4,13 @@ from style import color
 
 def addBars(card, player):
     paint = ImageDraw.Draw(card)
-    paint.rectangle( [(15, 130), (15 + player.health * 2, 145)], fill="#00A300", outline="green")
+    paint.rectangle([(15, 130), (15 + player.health * 2, 150)], fill="#00A300", outline="green")
     # paint.rectangle( [(15, 130), (15 + 100*2, 145)], fill="#90EE90", outline="green")
-    paint.rectangle([(15, 175), (15 + player.energy * 2, 190)], fill="#880ED4", outline="purple")
+    paint.rectangle([(15, 180), (15 + player.energy * 2, 200)], fill="#880ED4", outline="purple")
     # paint.rectangle([(15, 175), (15 + 100 * 2, 190)], fill="#880ED4", outline="purple")
-    paint.rectangle([(15, 220), (15 + player.shield * 2, 235)], fill="#2E2EFF", outline="blue")
+    paint.rectangle([(15, 230), (15 + player.shield * 2, 250)], fill="#2E2EFF", outline="blue")
     # paint.rectangle([(15, 220), (15 + 0 * 2, 235)], fill="#2E2EFF", outline="blue")
-    paint.rectangle([(15, 265), (15 + player.damage * 2, 280)], fill="#FF2E2E", outline="red")
+    paint.rectangle([(15, 280), (15 + player.damage * 2, 300)], fill="#FF2E2E", outline="red")
     # paint.rectangle([(15, 265), (15 + 0 * 2, 280)], fill="#FF2E2E", outline="red")
 
 def addText(card, player):
@@ -21,14 +21,14 @@ def addText(card, player):
 
     font = ImageFont.truetype('data/fonts/nick.ttf', size=15)
     text.text((15, 110), "Health", fill=color[f"{player.element}"], font=font)
-    text.text((15, 155), "Energy", fill=color[f"{player.element}"], font=font)
-    text.text((15, 200), "Shield", fill=color[f"{player.element}"], font=font)
-    text.text((15, 245), "Damage", fill=color[f"{player.element}"], font=font)
-    font = ImageFont.truetype('data/fonts/nick.ttf', size=11)
-    text.text((17, 132), f"{player.health}", fill=color[f"{player.element}"], font=font)
-    text.text((17, 177), f"{player.energy}", fill=color[f"{player.element}"], font=font)
-    text.text((17, 222), f"{player.shield}", fill=color[f"{player.element}"], font=font)
-    text.text((17, 267), f"{player.damage}", fill=color[f"{player.element}"], font=font)
+    text.text((15, 160), "Energy", fill=color[f"{player.element}"], font=font)
+    text.text((15, 210), "Shield", fill=color[f"{player.element}"], font=font)
+    text.text((15, 260), "Damage", fill=color[f"{player.element}"], font=font)
+    font = ImageFont.truetype('data/fonts/nick.ttf', size=15)
+    text.text((17, 130), f"{player.health}", fill=color[f"{player.element}"], font=font)
+    text.text((17, 180), f"{player.energy}", fill=color[f"{player.element}"], font=font)
+    text.text((17, 230), f"{player.shield}", fill=color[f"{player.element}"], font=font)
+    text.text((17, 280), f"{player.damage}", fill=color[f"{player.element}"], font=font)
 
 
 def card(player):
@@ -53,6 +53,6 @@ def get_concat_v(p1, p2):
     i2 = Image.open(f'data/cards/{p2.name}.jpg')
     merge.paste(i1, (0, 0))
     merge.paste(i2, (0, 340))
-    merge.save(f'data/cards/battle.jpg', quality=95)
+    merge.save(f'data/cards/{p1.name}-{p2.name}.jpg', quality=95)
 
 
