@@ -105,7 +105,7 @@ class Game:
         card(self.player2)
         get_concat_v(self.player1, self.player2)
 
-        await channel.send(file=File(f'data/cards/battle.jpg'))
+        await channel.send(file=File(f'data/cards/{self.player1.name}-{self.player2.name}.jpg'))
 
         if self.player1.health == 0:
             await channel.send(f"{self.player2.name} wins!")
@@ -134,6 +134,19 @@ bot = commands.Bot(intents=Intents.all(), command_prefix="!")
 @bot.command()
 async def test(ctx):
     await ctx.channel.send("I live!")
+
+
+@bot.command()
+async def gameinfo(ctx):
+    await ctx.channel.send(f"This is 2-man Bionicle step-by-step game (name is to be added)\n\n"
+                           f"Rules:\n"
+                           f"1. Two players confirm their participation by stating their element for the game.\n"
+                           f"2. Players make their move one after another.\n"
+                           f"Make sure to read what options you have. Writing move incorrectly or misspelling it will be punished.\n"
+                           f"3. Players' stats are updated after each person's move.\n"
+                           f"4. Each player can give up on their move by writing 'give up'.\n"
+                           f"5. The game is ended as soon as someone's health reaches zero.\n\n"
+                           f"Have fun!")
 
 
 @bot.command()
