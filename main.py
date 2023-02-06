@@ -5,7 +5,7 @@ from discord import Intents, File
 from discord.ext import commands
 from dotenv import load_dotenv
 from stats import elements
-from imageProcessing import card, get_concat_v
+from imageProcessing import card, merge, initInfo
 
 moves = ["mask", "normal", "heal"]
 valid_moves = ["mask", "normal", "heal", "rest"]
@@ -26,29 +26,9 @@ class Player:
     async def info(self, channel):
         await channel.send(f"<@{self.member.id}> abilities:\n"
                            f"1. Mask - {self.stats['mask']['name']}: {self.stats['mask']['description']}\n"
-                           f"- accumulates {abs(self.stats['mask']['shield'])} shield for the next opponent attack\n"
-                           f"- accumulates {abs(self.stats['mask']['damage'])} damage for the next attack\n"
-                           f"- deals {abs(self.stats['mask']['attack'])} damage to the opponent\n"
-                           f"- uses {abs(self.stats['mask']['energy'])} stamina\n"
-                           f"- restores {abs(self.stats['mask']['health'])} health\n\n"
                            f"2. Normal attack - {self.stats['normal']['name']}: {self.stats['normal']['description']}\n"
-                           f"- accumulates {abs(self.stats['normal']['shield'])} shield for the next opponent attack\n"
-                           f"- accumulates {abs(self.stats['normal']['damage'])} damage for the next attack\n"
-                           f"- deals {abs(self.stats['normal']['attack'])} damage to the opponent\n"
-                           f"- uses {abs(self.stats['normal']['energy'])} stamina\n"
-                           f"- restores {abs(self.stats['normal']['health'])} health\n\n"
                            f"3. Healing ability - {self.stats['heal']['name']}: {self.stats['heal']['description']}\n"
-                           f"- accumulates {abs(self.stats['heal']['shield'])} shield for the next opponent attack\n"
-                           f"- accumulates {abs(self.stats['heal']['damage'])} damage for the next attack\n"
-                           f"- deals {abs(self.stats['heal']['attack'])} damage to the opponent\n"
-                           f"- uses {abs(self.stats['heal']['energy'])} stamina\n"
-                           f"- restores {abs(self.stats['heal']['health'])} health\n\n"
                            f"4. Resting - {self.stats['rest']['name']}: {self.stats['rest']['description']}\n"
-                           f"- accumulates {abs(self.stats['rest']['shield'])} shield for the next opponent attack\n"
-                           f"- accumulates {abs(self.stats['rest']['damage'])} damage for the next attack\n"
-                           f"- deals {abs(self.stats['rest']['attack'])} damage to the opponent\n"
-                           f"- uses {abs(self.stats['rest']['energy'])} stamina\n"
-                           f"- restores {abs(self.stats['rest']['health'])} health\n\n"
                            )
 
     # are different because all change different states
@@ -142,7 +122,7 @@ class Game:
         # make visuals
         card(self.player1)
         card(self.player2)
-        get_concat_v(self.player1, self.player2)
+        merge(self.player1, self.player2)
 
         # send visuals
         await channel.send(file=File(f'data/cards/{self.player1.name}-{self.player2.name}.jpg'))
@@ -179,13 +159,21 @@ bot = commands.Bot(intents=Intents.all(), command_prefix="!")
 
 # commands start here
 @bot.command()
+async def info(ctx):
+    await ctx.channel.send(f"This is Lego Ukraine Interactive bot!\n"
+                           f"Available commands:\n"
+                           f"!gameinfo\n"
+                           f"!game")
+
+
+@bot.command()
 async def test(ctx):
     await ctx.channel.send("I live!")
 
 
 @bot.command()
 async def gameinfo(ctx):
-    await ctx.channel.send(f"This is 2-man Bionicle step-by-step game (name is to be added)\n\n"
+    await ctx.channel.send(f"This is 2-man Bionicle inspired step-by-step game (name is to be added)\n\n"
                            f"Rules:\n"
                            f"1. Two players confirm their participation by stating their element for the game.\n"
                            f"2. Players make their move one after another.\n"
@@ -193,11 +181,14 @@ async def gameinfo(ctx):
                            f"3. Players' stats are updated after each person's move.\n"
                            f"4. Each player can give up on their move by writing 'give up'.\n"
                            f"5. The game is ended as soon as someone's health reaches zero.\n\n"
+                           f"Do NOT write anything but move during your move, since it will recognize it as invalid move and punish you!\n"
                            f"Have fun!")
 
 
 @bot.command()
 async def game(ctx):
+    initInfo()
+    await ctx.channel.send(file=File("data/cards/info.jpg"))
     def check(m):
         if m.channel == ctx.channel:
                 return True
