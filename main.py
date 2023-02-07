@@ -7,8 +7,16 @@ from dotenv import load_dotenv
 from stats import elements
 from imageProcessing import card, merge, initInfo
 
-moves = ["mask", "normal", "heal"]
-valid_moves = ["mask", "normal", "heal", "rest"]
+moves = ["🎭 - mask", "🤜 - normal", "☕ - heal"]
+valid_moves = ["mask", "normal", "heal", "rest", "give up"]
+
+
+
+# bot login
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+GUILD = os.getenv('DISCORD_GUILD')
+bot = commands.Bot(intents=Intents.all(), command_prefix="!",help_command=None)
 
 
 # player class
@@ -23,6 +31,7 @@ class Player:
         self.damage = 0
         self.stats = elements[self.element]
 
+
     async def info(self, channel):
         await channel.send(f"<@{self.member.id}> abilities:\n"
                            f"1. Mask - {self.stats['mask']['name']}: {self.stats['mask']['description']}\n"
@@ -31,6 +40,7 @@ class Player:
                            f"4. Resting - {self.stats['rest']['name']}: {self.stats['rest']['description']}\n"
                            )
 
+
     # are different because all change different states
     def mask(self, other):
         other.health += self.stats["mask"]["attack"]
@@ -38,6 +48,8 @@ class Player:
         self.health += self.stats["mask"]["health"]
         self.shield += self.stats["mask"]["shield"]
         self.damage += self.stats["mask"]["damage"]
+
+
     def attack(self, other):
         other.health += self.stats["normal"]["attack"] + other.shield - self.damage
         other.shield = 0
@@ -46,16 +58,22 @@ class Player:
         self.health += self.stats["normal"]["health"]
         self.shield += self.stats["normal"]["shield"]
         self.damage += self.stats["normal"]["damage"]
+
+
     def heal(self, other):
         self.energy += self.stats["heal"]["energy"]
         self.health += self.stats["heal"]["health"]
         self.shield += self.stats["heal"]["shield"]
         self.damage += self.stats["heal"]["damage"]
+
+
     def rest(self, other):
         self.energy += self.stats["rest"]["energy"]
         self.health += self.stats["rest"]["health"]
         self.shield += self.stats["rest"]["shield"]
         self.damage += self.stats["rest"]["damage"]
+
+
 
 
 # game class
@@ -66,15 +84,8 @@ class Game:
         self.switch = bool(random.randint(0,1))
         self.switch = 0
 
-    # player move
-    async def move(self, channel):
-        # for move receive
-        def check(m):
-            if m.channel == channel and m.author == self.active.member:
-                return True
-            return False
 
-        # player switch
+    def Switch(self):
         if self.switch == True:
             self.active = self.player1
             self.other = self.player2
@@ -82,36 +93,76 @@ class Game:
             self.active = self.player2
             self.other = self.player1
 
+
+    def hit(self, move):
+        if move == "mask":
+            self.active.mask(self.other)
+        elif move == "normal":
+            self.active.attack(self.other)
+        elif move == "heal":
+            self.active.heal(self.other)
+        elif move == "rest":
+            self.active.rest(self.other)
+
+
+    async def win(self, channel):
+        if self.player1.health == 0:
+            await channel.send(f"{self.player2.name} wins!")
+            return True
+        if self.player2.health == 0:
+            await channel.send(f"{self.player1.name} wins!")
+            return True
+        self.switch = 0 if self.switch == 1 else 1
+        return False
+
+
+    # player move
+    async def move(self, channel):
+        # for move receive
+        def check(reaction, user):
+            return str(reaction) in ["🎭", "🤜", "☕", "🧘", "🏳"] and user.name == self.active.name
+
+        self.Switch()
+
         # player move choice
         await channel.send(f"<@{self.active.member.id}> attacks!")
-        validMoves = [x for x in moves if self.active.energy >= abs(self.active.stats[x]['energy'])] + ['rest']
+        availableMoves = [mv for mv in moves if self.active.energy >= abs(self.active.stats[mv[4:]]['energy'])] + ['🧘 - rest', '🏳 - give up']
+        choiceMessage = await channel.send(f"Choose from: {', '.join(availableMoves)}")
 
-        await channel.send(f"Choose from: {', '.join(validMoves)} (without command prefix)")
+        for emoji in [mv[0] for mv in availableMoves]:
+            await choiceMessage.add_reaction(emoji)
 
-        move = await bot.wait_for("message", check=check)
-        move = move.content.lower()
+        while True:
+            reaction, user = await bot.wait_for('reaction_add', check = check)
+            break
+
+        moves_ = {
+            "🎭" : "mask",
+            "🤜" : "normal",
+            "☕" : "heal",
+            "🧘" : "rest",
+            "🏳" : "give up"
+        }
+
+        move = moves_[str(reaction)]
+
+        print(move)
 
         # give up
         if move == "give up":
             await channel.send(f"{self.other.name} wins!")
             return True
 
+
         # if invalid move
-        if move not in validMoves:
+        if move not in [mv[4:] for mv in availableMoves]:
             await channel.send(f"{self.active.name}, you've input an incorrect command, maybe even cheated and input one that requires too many energy\n"
                   f"As punishment, you'll skip your move for now. Although, you'll have 5 energy restored")
             self.active.energy += 5
         # if valid
         else:
             await channel.send(f"{self.active.name} uses {self.active.stats[move]['name']}")
-            if move == "mask":
-                self.active.mask(self.other)
-            elif move == "normal":
-                self.active.attack(self.other)
-            elif move == "heal":
-                self.active.heal(self.other)
-            elif move == "rest":
-                self.active.rest(self.other)
+            self.hit(move)
 
         # zero health check
         if self.player1.health <= 0:
@@ -128,14 +179,7 @@ class Game:
         await channel.send(file=File(f'data/cards/{self.player1.name}-{self.player2.name}.jpg'))
 
         # win check
-        if self.player1.health == 0:
-            await channel.send(f"{self.player2.name} wins!")
-            return True
-        if self.player2.health == 0:
-            await channel.send(f"{self.player1.name} wins!")
-            return True
-        self.switch = 0 if self.switch == 1 else 1
-        return False
+        return await self.win(channel)
 
 # game switch
 async def gameTime(p1, e1, p2, e2, channel):
@@ -149,26 +193,13 @@ async def gameTime(p1, e1, p2, e2, channel):
         result = await game.move(channel)
     return True
 
-# bot login
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
-
-bot = commands.Bot(intents=Intents.all(), command_prefix="!")
 
 
 # commands start here
 @bot.command()
-async def info(ctx):
-    await ctx.channel.send(f"This is Lego Ukraine Interactive bot!\n"
-                           f"Available commands:\n"
-                           f"!gameinfo\n"
-                           f"!game")
-
-
-@bot.command()
 async def test(ctx):
     await ctx.channel.send("I live!")
+
 
 
 @bot.command()
@@ -177,52 +208,92 @@ async def gameinfo(ctx):
                            f"Rules:\n"
                            f"1. Two players confirm their participation by stating their element for the game.\n"
                            f"2. Players make their move one after another.\n"
-                           f"Make sure to read what options you have. Writing move incorrectly or misspelling it will be punished.\n"
+                           f"Make sure to read what options you have. Trying to make a move that takes more stamina than you have will be punished.\n"
                            f"3. Players' stats are updated after each person's move.\n"
                            f"4. Each player can give up on their move by writing 'give up'.\n"
                            f"5. The game is ended as soon as someone's health reaches zero.\n\n"
-                           f"Do NOT write anything but move during your move, since it will recognize it as invalid move and punish you!\n"
                            f"Have fun!")
+
+
+
+async def playerEntry(ctx):
+    def check(reaction, user):
+        return str(reaction) in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"] and user.id != bot.user.id
+
+    choiceMessage = await ctx.channel.send("Next player, please send your element as confirmation. Please, react with one from:\n"
+                           f"Fire - 🟥\nWater - 🟦\nEarth - ⬛\nStone - 🟫\nAir - 🟩\nIce - ⬜")
+    for emoji in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"]:
+        await choiceMessage.add_reaction(emoji)
+    while True:
+        try:
+            reaction, user = await bot.wait_for('reaction_add', timeout = 1.0, check = check)
+            break
+        except:
+            pass
+    els = {
+        "🟥" : "fire",
+        "🟦": "water",
+        "⬛": "earth",
+        "🟫": "stone",
+        "🟩": "air",
+        "⬜": "ice",
+    }
+    await ctx.channel.send(f"Player confirmed: {user.name}, {els[str(reaction)]}")
+    avatar = ctx.author.display_avatar.url
+    data = requests.get(avatar).content
+    with open(f"data/avatar/{user.name}.jpg", 'wb') as handler:
+        handler.write(data)
+    return user, els[str(reaction)]
+
+
+@bot.command()
+async def element(ctx):
+    def check(reaction, user):
+        return str(reaction) in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"] and user == ctx.author
+
+    choiceMessage = await ctx.channel.send("Choose element to get info about")
+    for emoji in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"]:
+        await choiceMessage.add_reaction(emoji)
+    while True:
+        reaction, user = await bot.wait_for("reaction_add", check=check)
+        break
+
+    els = {
+        "🟥" : "fire",
+        "🟦": "water",
+        "⬛": "earth",
+        "🟫": "stone",
+        "🟩": "air",
+        "⬜": "ice",
+    }
+    elinfo = els[str(reaction)]
+    await ctx.channel.send(f"{elinfo} abilities:\n"
+                       f"1. Mask - {elements[elinfo]['mask']['name']}: {elements[elinfo]['mask']['description']}\n\n"
+                       f"2. Normal attack - {elements[elinfo]['normal']['name']}: {elements[elinfo]['normal']['description']}\n\n"
+                       f"3. Healing ability - {elements[elinfo]['heal']['name']}: {elements[elinfo]['heal']['description']}\n\n"
+                       f"4. Resting - {elements[elinfo]['rest']['name']}: {elements[elinfo]['rest']['description']}\n\n"
+                       )
+
+
+@bot.command()
+async def help(ctx):
+    await ctx.channel.send(f"This is Lego Ukraine Interactive bot (LUI), that is created for Lego Ukraine discord server\n"
+                           f"The bot is in development, so wait for updates!\n\n"
+                           f"Available commands are:\n\n"
+                           f"!help - show this message\n"
+                           f"!test - check if the bot is alive (not guaranteed for now...)\n"
+                           f"!element - get information about a specific element of Bionicle Game\n"
+                           f"!gameinfo - get information and rules about Bionicle 1v1 game\n"
+                           f"!game - start the game")
 
 
 @bot.command()
 async def game(ctx):
     initInfo()
     await ctx.channel.send(file=File("data/cards/info.jpg"))
-    def check(m):
-        if m.channel == ctx.channel:
-                return True
-        return False
 
-    await ctx.channel.send("Player 1, please send your element as confirmation. Please, choose from:\n"
-                           f"Fire\nWater\nEarth\nStone\nAir\nIce")
-    while True:
-        m = await bot.wait_for("message", check=check)
-        m.content = m.content.lower()
-        if m.content in ["fire", "water", "earth", "stone", "air", "ice"]:
-            await m.channel.send(f"Player 1 confirmed: {m.author}, {m.content}")
-            avatar = m.author.display_avatar.url
-            data = requests.get(avatar).content
-            with open(f"data/avatar/{m.author.name}.jpg", 'wb') as handler:
-                handler.write(data)
-            break
-    player1 = m.author
-    el1 = m.content.lower()
-
-    await ctx.channel.send(f"Player 2, please send your element as confirmation. Please, choose from:\n"
-                           f"Fire\nWater\nEarth\nStone\nAir\nIce")
-    while True:
-        m = await bot.wait_for("message", check=check)
-        m.content = m.content.lower()
-        if m.content in ["fire", "water", "earth", "stone", "air", "ice"]:
-            await m.channel.send(f"Player 2 confirmed: {m.author}, {m.content}")
-            avatar = m.author.display_avatar.url
-            data = requests.get(avatar).content
-            with open(f"data/avatar/{m.author.name}.jpg", 'wb') as handler:
-                handler.write(data)
-            break
-    player2 = m.author
-    el2 = m.content.lower()
+    player1, el1 = await playerEntry(ctx)
+    player2, el2 = await playerEntry(ctx)
 
     await gameTime(player1, el1, player2, el2, ctx.channel)
 
