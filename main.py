@@ -218,11 +218,11 @@ async def gameinfo(ctx):
 
 async def playerEntry(ctx):
     def check(reaction, user):
-        return str(reaction) in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"] and user.id != bot.user.id
+        return str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"] and user.id != bot.user.id
 
     choiceMessage = await ctx.channel.send("Next player, please send your element as confirmation. Please, react with one from:\n"
-                           f"Fire - 🟥\nWater - 🟦\nEarth - ⬛\nStone - 🟫\nAir - 🟩\nIce - ⬜")
-    for emoji in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"]:
+                           f"Fire - 🔥\nWater - 💧\nEarth - 🌄\nStone - 🪨\nAir - 🌪\nIce - ❄")
+    for emoji in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]:
         await choiceMessage.add_reaction(emoji)
     while True:
         try:
@@ -231,12 +231,12 @@ async def playerEntry(ctx):
         except:
             pass
     els = {
-        "🟥" : "fire",
-        "🟦": "water",
-        "⬛": "earth",
-        "🟫": "stone",
-        "🟩": "air",
-        "⬜": "ice",
+        "🔥" : "fire",
+        "💧": "water",
+        "🌄": "earth",
+        "🪨": "stone",
+        "🌪": "air",
+        "❄": "ice",
     }
     await ctx.channel.send(f"Player confirmed: {user.name}, {els[str(reaction)]}")
     avatar = ctx.author.display_avatar.url
@@ -249,22 +249,22 @@ async def playerEntry(ctx):
 @bot.command()
 async def element(ctx):
     def check(reaction, user):
-        return str(reaction) in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"] and user == ctx.author
+        return str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"] and user == ctx.author
 
     choiceMessage = await ctx.channel.send("Choose element to get info about")
-    for emoji in ["🟥", "🟦", "⬛", "🟫", "🟩", "⬜"]:
+    for emoji in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]:
         await choiceMessage.add_reaction(emoji)
     while True:
         reaction, user = await bot.wait_for("reaction_add", check=check)
         break
 
     els = {
-        "🟥" : "fire",
-        "🟦": "water",
-        "⬛": "earth",
-        "🟫": "stone",
-        "🟩": "air",
-        "⬜": "ice",
+        "🔥" : "fire",
+        "💧": "water",
+        "🌄": "earth",
+        "🪨": "stone",
+        "🌪": "air",
+        "❄": "ice",
     }
     elinfo = els[str(reaction)]
     await ctx.channel.send(f"{elinfo} abilities:\n"
