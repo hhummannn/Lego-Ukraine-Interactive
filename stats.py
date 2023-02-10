@@ -198,7 +198,7 @@ elements = {
         "mask" : {
             "name" : "Eagle eye",
             "shield" : 4,
-            "damage" : 8,
+            "damage" : 6,
             "attack" : 0,
             "energy" : -25,
             "health" : 0,
@@ -206,7 +206,7 @@ elements = {
         },
         "normal" : {
             "name" : "Absolute zero",
-            "shield" : 4,
+            "shield" : 2,
             "damage" : 0,
             "attack" : -23,
             "energy" : -28,
