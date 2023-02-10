@@ -132,9 +132,7 @@ class Game:
         for emoji in [mv[0] for mv in availableMoves]:
             await choiceMessage.add_reaction(emoji)
 
-        while True:
-            reaction, user = await bot.wait_for('reaction_add', check = check)
-            break
+        reaction, user = await bot.wait_for('reaction_add', check = check)
 
         moves_ = {
             "🎭" : "mask",
@@ -155,8 +153,8 @@ class Game:
 
         # if invalid move
         if move not in [mv[4:] for mv in availableMoves]:
-            await channel.send(f"{self.active.name}, you've input an incorrect command, maybe even cheated and input one that requires too many energy\n"
-                  f"As punishment, you'll skip your move for now. Although, you'll have 5 energy restored")
+            await channel.send(f"{self.active.name}, you seem to have cheated and tried a move that requires too many energy\n"
+                  f"As punishment, you'll skip your move. You'll have 5 energy restored")
             self.active.energy += 5
         # if valid
         else:
@@ -195,18 +193,17 @@ async def gameTime(p1, e1, p2, e2, channel):
 
 async def playerEntry(ctx):
     def check(reaction, user):
-        return str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"] and user.id != bot.user.id
+        return str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"] \
+               and user.id != bot.user.id \
+               and reaction.message.content == choiceMessage.content
 
     choiceMessage = await ctx.channel.send("Next player, please send your element as confirmation. Please, react with one from:\n"
                            f"Fire - 🔥\nWater - 💧\nEarth - 🌄\nStone - 🪨\nAir - 🌪\nIce - ❄")
     for emoji in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]:
         await choiceMessage.add_reaction(emoji)
-    while True:
-        try:
-            reaction, user = await bot.wait_for('reaction_add', timeout = 1.0, check = check)
-            break
-        except:
-            pass
+
+    reaction, user = await bot.wait_for('reaction_add', timeout = 1.0, check = check)
+
     els = {
         "🔥" : "fire",
         "💧": "water",
