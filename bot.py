@@ -11,7 +11,6 @@ from game import Game, Player
 # bot login
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD = os.getenv("DISCORD_GUILD")
 bot = commands.Bot(intents=Intents.all(), command_prefix="!", help_command=None)
 
 
