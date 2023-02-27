@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from stats import elements
 from imageProcessing import initInfo
 from game import Game, Player
+import random
 
 # bot login
 load_dotenv()
@@ -29,9 +30,9 @@ async def gameTime(p1, e1, p2, e2, channel):
 async def playerEntry(ctx):
     def check(reaction, user):
         return (
-            str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]
-            and user.id != bot.user.id
-            and reaction.message.content == choiceMessage.content
+                str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]
+                and user.id != bot.user.id
+                and reaction.message.content == choiceMessage.content
         )
 
     choiceMessage = await ctx.channel.send(
@@ -135,6 +136,50 @@ async def game(ctx):
     player2, el2 = await playerEntry(ctx)
 
     await gameTime(player1, el1, player2, el2, ctx.channel)
+
+
+@bot.command()
+async def quiz(ctx):
+    from quiz import quests
+    def check(message):
+        return message.content in questions[n][1:]
+
+    users = []
+
+    nums = [*range(len(quests))]
+    questions = quests
+
+    for num in range(5):
+        n = random.randint(0, len(quests))
+        await ctx.channel.send(f"Question {num}: {questions[n][0]}")
+        message = await bot.wait_for("message", check=check)
+        await ctx.channel.send(f"<@{message.author.id}> answers correctly!")
+        questions.remove(questions[n])
+        if message.author.id in [user[0] for user in users]:
+            for user in users:
+                if message.author.id in user:
+                    user[1] += 1
+        else:
+            users.append([message.author.id, 1])
+
+    users.sort(key=lambda user: user[1], reverse=True)
+
+    winner = users[0][0]
+
+    try:
+        if users[0][1] == users[1][1]:
+            def check2(message):
+                return message.author.id in [user for user in users if user[1] == users[0][1]] and message.content in questions[n][1:]
+
+            n = random.randint(0, len(questions))
+            await ctx.channel.send(f"Bouns question {num}: {questions[n][0]}")
+            message = await bot.wait_for("message", check=check2)
+            await ctx.channel.send(f"<@{message.author.id}> answers correctly!")
+            winner = message.author.id
+    except:
+        pass
+
+    await ctx.channel.send(f"<@{winner}> wins the game!")
 
 
 bot.run(TOKEN)

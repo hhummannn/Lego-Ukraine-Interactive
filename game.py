@@ -1,5 +1,4 @@
 from imageProcessing import card, merge
-from stats import elements
 import random
 from discord import File
 
@@ -10,6 +9,7 @@ valid_moves = ["mask", "normal", "heal", "rest", "give up"]
 
 class Player:
     def __init__(self, name, element, member):
+        from stats import elements
         self.member = member
         self.name = name
         self.element = element
