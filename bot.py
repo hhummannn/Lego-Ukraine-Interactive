@@ -1,17 +1,15 @@
 import os
-import random
 import requests
 from discord import Intents, File
 from discord.ext import commands
 from dotenv import load_dotenv
 from stats import elements
-from imageProcessing import card, merge, initInfo
+from imageProcessing import initInfo
 from game import Game, Player
 
 # bot login
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-GUILD = os.getenv("DISCORD_GUILD")
 bot = commands.Bot(intents=Intents.all(), command_prefix="!", help_command=None)
 
 
@@ -37,7 +35,7 @@ async def playerEntry(ctx):
         )
 
     choiceMessage = await ctx.channel.send(
-        "Next player, please send your element as confirmation. Please, react with one from:\n"
+        f"Next player, please send your element as confirmation. Please, react with one from:\n"
         f"Fire - 🔥\nWater - 💧\nEarth - 🌄\nStone - 🪨\nAir - 🌪\nIce - ❄"
     )
     for emoji in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]:
@@ -87,7 +85,7 @@ async def element(ctx):
         return str(reaction) in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"] and user == ctx.author
 
     choiceMessage = await ctx.channel.send(
-        "Choose element to get info about:\n"
+        f"Choose element to get info about:\n"
         f"Fire - 🔥\nWater - 💧\nEarth - 🌄\nStone - 🪨\nAir - 🌪\nIce - ❄"
     )
     for emoji in ["🔥", "💧", "🌄", "🪨", "🌪", "❄"]:
