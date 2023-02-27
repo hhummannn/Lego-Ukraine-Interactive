@@ -2,12 +2,10 @@ from imageProcessing import card, merge
 from stats import elements
 import random
 from discord import File
-from discord.ext import commands
 
 
 moves = ["🎭 - mask", "🤜 - normal", "☕ - heal"]
 valid_moves = ["mask", "normal", "heal", "rest", "give up"]
-
 
 
 class Player:
@@ -69,7 +67,7 @@ class Game:
         self.switch = 0
 
     def Switch(self):
-        if self.switch == True:
+        if self.switch:
             self.active = self.player1
             self.other = self.player2
         else:
